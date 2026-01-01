@@ -700,25 +700,31 @@ waterPart.Name = "PupperJesusPlatform"
 waterPart.Parent = workspace
 waterPart.Position = Vector3.new(0, -5000, 0)
 
+local function isWaterAt(pos)
+    local region = Region3.new(
+        pos - Vector3.new(1,1,1),
+        pos + Vector3.new(1,1,1)
+    )
+
+    local materials = workspace.Terrain:ReadVoxels(region, 4)
+    return materials[1][1][1] == Enum.Material.Water
+end
+
 local function enableJesus()
     Features.Jesus = true
     if jesusConn then jesusConn:Disconnect() end
 
     jesusConn = RunService.RenderStepped:Connect(function()
         if not Features.Jesus then return end
+
         local char = player.Character
         if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
         local hrp = char.HumanoidRootPart
+        local below = hrp.Position - Vector3.new(0, 4, 0)
 
-        local params = RaycastParams.new()
-        params.FilterType = Enum.RaycastFilterType.Blacklist
-        params.FilterDescendantsInstances = {char, waterPart}
-
-        local result = workspace:Raycast(hrp.Position, Vector3.new(0, -20, 0), params)
-
-        if result and result.Material == Enum.Material.Water then
-            waterPart.Position = Vector3.new(hrp.Position.X, result.Position.Y + 1.5, hrp.Position.Z)
+        if isWaterAt(below) then
+            waterPart.Position = Vector3.new(hrp.Position.X, below.Y + 2.5, hrp.Position.Z)
         else
             waterPart.Position = Vector3.new(0, -5000, 0)
         end
@@ -730,6 +736,7 @@ local function disableJesus()
     if jesusConn then jesusConn:Disconnect() jesusConn = nil end
     waterPart.Position = Vector3.new(0, -5000, 0)
 end
+
 
 --========================
 -- SPIN
