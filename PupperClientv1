@@ -1,0 +1,970 @@
+--========================================================
+-- PUPPER ULTIMATE: FULL REBUILT CLIENT (NEW AIMBOT EDITION)
+--========================================================
+
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+--========================================================
+-- SAFETY CLEANUP
+--========================================================
+local old = game:GetService("CoreGui"):FindFirstChild("PupperStable")
+if not old and player:FindFirstChild("PlayerGui") then
+    old = player.PlayerGui:FindFirstChild("PupperStable")
+end
+if old then
+    old:Destroy()
+end
+
+--========================================================
+-- GLOBAL STATE
+--========================================================
+local Features = {
+    Fly = false,
+    FlySpeed = 60,
+    Noclip = false,
+    InfJump = false,
+    Jesus = false,
+    Spin = false,
+    ESP = true,
+}
+
+--========================================================
+-- GUI ROOT
+--========================================================
+local gui = Instance.new("ScreenGui")
+gui.Name = "PupperStable"
+gui.ResetOnSpawn = false
+
+local coreGui = game:GetService("CoreGui")
+if coreGui:FindFirstChild("RobloxGui") then
+    gui.Parent = coreGui
+else
+    gui.Parent = player:WaitForChild("PlayerGui")
+end
+
+--========================================================
+-- PUPPY ICON (MAIN TOGGLE)
+--========================================================
+local toggle = Instance.new("TextButton")
+toggle.Parent = gui
+toggle.Size = UDim2.fromOffset(55, 55)
+toggle.Position = UDim2.new(0, 10, 0.5, 0)
+toggle.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+toggle.Text = "🐶"
+toggle.TextSize = 25
+toggle.TextColor3 = Color3.new(1,1,1)
+toggle.ZIndex = 100
+toggle.AutoButtonColor = false
+
+do
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(1, 0)
+    c.Parent = toggle
+    local s = Instance.new("UIStroke")
+    s.Thickness = 2
+    s.Color = Color3.fromRGB(255,255,255)
+    s.Parent = toggle
+end
+
+-- Drag logic
+do
+    local dragging = false
+    local dragStart
+    local startPos
+
+    toggle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = toggle.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            toggle.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+
+--========================================================
+-- MAIN WINDOW
+--========================================================
+local main = Instance.new("Frame")
+main.Parent = gui
+main.Size = UDim2.fromOffset(330, 460)
+main.Position = UDim2.fromScale(0.5, 0.5)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+main.Visible = false
+
+do
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 10)
+    c.Parent = main
+end
+
+toggle.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+end)
+
+local title = Instance.new("TextLabel")
+title.Parent = main
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "PUPPER CLIENT"
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1,1,1)
+title.TextSize = 18
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Parent = main
+scroll.Size = UDim2.new(1, -20, 1, -100)
+scroll.Position = UDim2.new(0, 10, 0, 45)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 3
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local layout = Instance.new("UIListLayout")
+layout.Parent = scroll
+layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+--========================================================
+-- COLLAPSIBLE SECTION FACTORY
+--========================================================
+local sections = {}
+
+local function createSection(sectionName)
+    local container = Instance.new("Frame")
+    container.Parent = scroll
+    container.BackgroundColor3 = Color3.fromRGB(20,20,24)
+    container.ClipsDescendants = true
+    container.Size = UDim2.new(1, 0, 0, 35)
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = container
+
+    local header = Instance.new("TextButton")
+    header.Parent = container
+    header.Size = UDim2.new(1, -10, 0, 30)
+    header.Position = UDim2.new(0, 5, 0, 3)
+    header.BackgroundTransparency = 1
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 15
+    header.TextColor3 = Color3.new(1,1,1)
+    header.Text = sectionName .. "  ►"
+    header.AutoButtonColor = false
+
+    local content = Instance.new("Frame")
+    content.Parent = container
+    content.Size = UDim2.new(1, -10, 0, 0)
+    content.Position = UDim2.new(0, 5, 0, 35)
+    content.BackgroundTransparency = 1
+
+    local clayout = Instance.new("UIListLayout")
+    clayout.Parent = content
+    clayout.Padding = UDim.new(0, 4)
+    clayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    sections[sectionName] = {
+        Container = container,
+        Header = header,
+        Content = content,
+        Open = false,
+    }
+
+    local function recalcHeight()
+        local total = 35
+        for _, child in ipairs(content:GetChildren()) do
+            if child:IsA("GuiObject") then
+                total = total + child.AbsoluteSize.Y + clayout.Padding.Offset
+            end
+        end
+        return total
+    end
+
+    local function closeSection(sec)
+        if not sec.Open then return end
+        sec.Open = false
+        sec.Header.Text = sectionName .. "  ►"
+        TweenService:Create(
+            sec.Container,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = UDim2.new(1, 0, 0, 35)}
+        ):Play()
+    end
+
+    local function openSection(sec)
+        if sec.Open then return end
+        sec.Open = true
+        sec.Header.Text = sectionName .. "  ▼"
+
+        for _, other in pairs(sections) do
+            if other ~= sec then closeSection(other) end
+        end
+
+        TweenService:Create(
+            sec.Container,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Size = UDim2.new(1, 0, 0, recalcHeight())}
+        ):Play()
+    end
+
+    header.MouseButton1Click:Connect(function()
+        if sections[sectionName].Open then
+            closeSection(sections[sectionName])
+        else
+            openSection(sections[sectionName])
+        end
+    end)
+
+    content.ChildAdded:Connect(function()
+        task.wait()
+        if sections[sectionName].Open then
+            container.Size = UDim2.new(1, 0, 0, recalcHeight())
+        end
+    end)
+
+    return content
+end
+--========================================================
+-- NEW AIMBOT SYSTEM (REPLACES OLD SYSTEM COMPLETELY)
+--========================================================
+
+-- Core aimbot variables
+local AimbotEnabled = false
+local AimbotMode = "Closest"     -- Closest, Strongest, Weakest, Furthest
+local TeamCheck = false
+local AimbotFOV = 300
+local AimbotSmooth = 0.15
+
+-- Lock Mode: Off, Soft, Hard
+local LockMode = "Off"
+
+--========================================================
+-- FOV CIRCLE (Drawing API)
+--========================================================
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = true
+fovCircle.Color = Color3.fromRGB(0,255,120)
+fovCircle.Thickness = 2
+fovCircle.NumSides = 64
+fovCircle.Radius = AimbotFOV
+fovCircle.Filled = false
+
+RunService.RenderStepped:Connect(function()
+    local m = UserInputService:GetMouseLocation()
+    fovCircle.Position = Vector2.new(m.X, m.Y)
+    fovCircle.Radius = AimbotFOV
+end)
+
+--========================================================
+-- FLOATING AIMBOT BUTTON (MERGED INTO MAIN GUI)
+--========================================================
+local aimBtn = Instance.new("TextButton")
+aimBtn.Parent = gui
+aimBtn.Size = UDim2.fromOffset(55, 55)
+aimBtn.Position = UDim2.new(0, 70, 0, 70) -- next to 🐶 icon
+aimBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+aimBtn.Text = "🎯"
+aimBtn.TextSize = 25
+aimBtn.TextColor3 = Color3.new(1,1,1)
+aimBtn.ZIndex = 100
+aimBtn.AutoButtonColor = false
+
+local c = Instance.new("UICorner")
+c.CornerRadius = UDim.new(1, 0)
+c.Parent = aimBtn
+
+local function updateAimbotButton()
+    aimBtn.BackgroundColor3 = AimbotEnabled and Color3.fromRGB(60,200,80)
+        or Color3.fromRGB(40,40,45)
+end
+
+aimBtn.MouseButton1Click:Connect(function()
+    AimbotEnabled = not AimbotEnabled
+    updateAimbotButton()
+end)
+
+-- Dragging
+do
+    local dragging = false
+    local dragStart, startPos
+
+    aimBtn.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = i.Position
+            startPos = aimBtn.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(i)
+        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = i.Position - dragStart
+            aimBtn.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
+
+--========================================================
+-- HOTKEYS
+--========================================================
+
+-- Toggle aimbot
+UserInputService.InputBegan:Connect(function(i, gp)
+    if gp then return end
+    if i.KeyCode == Enum.KeyCode.Comma then
+        AimbotEnabled = not AimbotEnabled
+        updateAimbotButton()
+    end
+end)
+
+-- Toggle lock mode
+UserInputService.InputBegan:Connect(function(i, gp)
+    if gp then return end
+    if i.KeyCode == Enum.KeyCode.M then
+        if LockMode == "Off" then
+            LockMode = "Soft"
+        elseif LockMode == "Soft" then
+            LockMode = "Hard"
+        else
+            LockMode = "Off"
+        end
+        print("Aimbot Lock Mode:", LockMode)
+    end
+end)
+
+--========================================================
+-- TARGET SELECTOR
+--========================================================
+local function getTarget()
+    local best = nil
+    local bestValue = (AimbotMode == "Weakest") and math.huge or -math.huge
+    local mousePos = UserInputService:GetMouseLocation()
+    local myChar = player.Character
+    local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+
+            -- Team check
+            if TeamCheck and player.Team ~= nil and plr.Team ~= nil then
+                if plr.Team == player.Team then
+                    continue
+                end
+            end
+
+            local hrp = plr.Character.HumanoidRootPart
+            local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+
+            if hum and hum.Health > 0 then
+                local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+                if onScreen then
+                    local dist2D = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                    if dist2D < AimbotFOV then
+
+                        if AimbotMode == "Closest" then
+                            if best == nil or dist2D < bestValue then
+                                bestValue = dist2D
+                                best = hrp
+                            end
+
+                        elseif AimbotMode == "Strongest" then
+                            if hum.Health > bestValue then
+                                bestValue = hum.Health
+                                best = hrp
+                            end
+
+                        elseif AimbotMode == "Weakest" then
+                            if hum.Health < bestValue then
+                                bestValue = hum.Health
+                                best = hrp
+                            end
+
+                        elseif AimbotMode == "Furthest" and myHRP then
+                            local dist3D = (hrp.Position - myHRP.Position).Magnitude
+                            if dist3D > bestValue then
+                                bestValue = dist3D
+                                best = hrp
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return best
+end
+
+--========================================================
+-- AIMBOT LOOP (LOCK MODES)
+--========================================================
+RunService.RenderStepped:Connect(function()
+    if not AimbotEnabled then return end
+    if LockMode == "Off" then return end
+
+    local target = getTarget()
+    if not target then return end
+
+    local camPos = camera.CFrame.Position
+    local goal = CFrame.new(camPos, target.Position)
+
+    if LockMode == "Hard" then
+        camera.CFrame = goal
+    else
+        camera.CFrame = camera.CFrame:Lerp(goal, AimbotSmooth)
+    end
+end)
+--========================================================
+-- ESP SYSTEM (CLEAN + OPTIMIZED)
+--========================================================
+
+local espObjects = {}
+
+local function createESP(plr)
+    if plr == player then return end
+    if espObjects[plr] then return end
+
+    local box = Drawing.new("Square")
+    box.Thickness = 2
+    box.Color = Color3.fromRGB(0,255,0)
+    box.Filled = false
+
+    local tracer = Drawing.new("Line")
+    tracer.Thickness = 1
+    tracer.Color = Color3.fromRGB(0,255,0)
+
+    local nameTag = Drawing.new("Text")
+    nameTag.Size = 16
+    nameTag.Color = Color3.fromRGB(255,255,255)
+    nameTag.Center = true
+    nameTag.Outline = true
+
+    espObjects[plr] = {
+        Box = box,
+        Tracer = tracer,
+        Name = nameTag
+    }
+end
+
+local function removeESP(plr)
+    local data = espObjects[plr]
+    if data then
+        for _, obj in pairs(data) do
+            pcall(function() obj:Remove() end)
+        end
+        espObjects[plr] = nil
+    end
+end
+
+-- Create ESP for existing players
+for _, plr in ipairs(Players:GetPlayers()) do
+    createESP(plr)
+end
+
+Players.PlayerAdded:Connect(createESP)
+Players.PlayerRemoving:Connect(removeESP)
+
+--========================================================
+-- ESP UPDATE LOOP
+--========================================================
+RunService.RenderStepped:Connect(function()
+    if not Features.ESP then
+        for _, data in pairs(espObjects) do
+            data.Box.Visible = false
+            data.Tracer.Visible = false
+            data.Name.Visible = false
+        end
+        return
+    end
+
+    local vp = camera.ViewportSize
+
+    for plr, data in pairs(espObjects) do
+        local char = plr.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+
+            -- Team check (same as aimbot)
+            if TeamCheck and player.Team and plr.Team and plr.Team == player.Team then
+                data.Box.Visible = false
+                data.Tracer.Visible = false
+                data.Name.Visible = false
+                continue
+            end
+
+            local hrp = char.HumanoidRootPart
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local pos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+
+            if onScreen then
+                local size = Vector2.new(2000 / pos.Z, 3000 / pos.Z)
+
+                data.Box.Size = size
+                data.Box.Position = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
+                data.Box.Visible = true
+
+                data.Tracer.From = Vector2.new(vp.X/2, vp.Y)
+                data.Tracer.To = Vector2.new(pos.X, pos.Y)
+                data.Tracer.Visible = true
+
+                local hpText = hum and (" [" .. math.floor(hum.Health) .. "]") or ""
+                data.Name.Text = plr.Name .. hpText
+                data.Name.Position = Vector2.new(pos.X, pos.Y - size.Y/2 - 15)
+                data.Name.Visible = true
+            else
+                data.Box.Visible = false
+                data.Tracer.Visible = false
+                data.Name.Visible = false
+            end
+        else
+            data.Box.Visible = false
+            data.Tracer.Visible = false
+            data.Name.Visible = false
+        end
+    end
+end)
+--========================================================
+-- MOVEMENT SYSTEM (FLY, NOCLIP, INF JUMP, JESUS, SPIN)
+--========================================================
+
+--========================
+-- FLY
+--========================
+local flyBV, flyConn
+
+local function enableFly()
+    Features.Fly = true
+    if flyConn then flyConn:Disconnect() end
+
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+
+    flyBV = Instance.new("BodyVelocity")
+    flyBV.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+    flyBV.Velocity = Vector3.new(0,0,0)
+    flyBV.Parent = hrp
+
+    flyConn = RunService.RenderStepped:Connect(function()
+        if not Features.Fly then return end
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+
+        hrp = player.Character.HumanoidRootPart
+        local move = Vector3.zero
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            move += camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            move -= camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            move -= camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            move += camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            move += Vector3.new(0,1,0)
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            move -= Vector3.new(0,1,0)
+        end
+
+        if move.Magnitude > 0 then
+            move = move.Unit
+        end
+
+        flyBV.Velocity = move * Features.FlySpeed
+    end)
+end
+
+local function disableFly()
+    Features.Fly = false
+    if flyConn then flyConn:Disconnect() flyConn = nil end
+    if flyBV then flyBV:Destroy() flyBV = nil end
+end
+
+--========================
+-- NOCLIP
+--========================
+local noclipConn
+
+local function enableNoclip()
+    Features.Noclip = true
+    if noclipConn then noclipConn:Disconnect() end
+
+    noclipConn = RunService.Stepped:Connect(function()
+        if not Features.Noclip then return end
+        local char = player.Character
+        if not char then return end
+
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Physics)
+        end
+    end)
+end
+
+local function disableNoclip()
+    Features.Noclip = false
+    if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+
+    local char = player.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
+
+--========================
+-- INFINITE JUMP
+--========================
+local infJumpConn
+
+local function enableInfJump()
+    Features.InfJump = true
+    if infJumpConn then infJumpConn:Disconnect() end
+
+    infJumpConn = UserInputService.JumpRequest:Connect(function()
+        if Features.InfJump and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end)
+end
+
+local function disableInfJump()
+    Features.InfJump = false
+    if infJumpConn then infJumpConn:Disconnect() infJumpConn = nil end
+end
+
+--========================
+-- JESUS (Walk on Water)
+--========================
+local jesusConn
+
+local waterPart = Instance.new("Part")
+waterPart.Size = Vector3.new(6, 0.1, 6)
+waterPart.Anchored = true
+waterPart.Transparency = 1
+waterPart.CanCollide = true
+waterPart.Name = "PupperJesusPlatform"
+waterPart.Parent = workspace
+waterPart.Position = Vector3.new(0, -5000, 0)
+
+local function enableJesus()
+    Features.Jesus = true
+    if jesusConn then jesusConn:Disconnect() end
+
+    jesusConn = RunService.RenderStepped:Connect(function()
+        if not Features.Jesus then return end
+        local char = player.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+        local hrp = char.HumanoidRootPart
+
+        local params = RaycastParams.new()
+        params.FilterType = Enum.RaycastFilterType.Blacklist
+        params.FilterDescendantsInstances = {char, waterPart}
+
+        local result = workspace:Raycast(hrp.Position, Vector3.new(0, -20, 0), params)
+
+        if result and result.Material == Enum.Material.Water then
+            waterPart.Position = Vector3.new(hrp.Position.X, result.Position.Y + 1.5, hrp.Position.Z)
+        else
+            waterPart.Position = Vector3.new(0, -5000, 0)
+        end
+    end)
+end
+
+local function disableJesus()
+    Features.Jesus = false
+    if jesusConn then jesusConn:Disconnect() jesusConn = nil end
+    waterPart.Position = Vector3.new(0, -5000, 0)
+end
+
+--========================
+-- SPIN
+--========================
+local spinConn
+local spinSpeed = 6
+
+local function enableSpin()
+    Features.Spin = true
+    if spinConn then spinConn:Disconnect() end
+
+    spinConn = RunService.RenderStepped:Connect(function()
+        if not Features.Spin then return end
+        local char = player.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+        local hrp = char.HumanoidRootPart
+        hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
+    end)
+end
+
+local function disableSpin()
+    Features.Spin = false
+    if spinConn then spinConn:Disconnect() spinConn = nil end
+end
+--========================================================
+-- FUN FEATURES (SPIN + PUPPER BOMB)
+--========================================================
+
+-- SPIN is already defined in PART 4:
+-- enableSpin()
+-- disableSpin()
+
+--========================================================
+-- PUPPER BOMB
+--========================================================
+local function pupperBomb(button)
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then
+        button.Text = "NO CHARACTER"
+        task.wait(1)
+        button.Text = "PUPPER BOMB"
+        return
+    end
+
+    -- Visual feedback
+    button.AutoButtonColor = false
+    button.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
+
+    -- Spin + countdown
+    enableSpin()
+    button.Text = "BOOM IN 3..."
+    task.wait(1)
+
+    enableFly()
+    Features.FlySpeed = 120
+
+    button.Text = "BOOM IN 1..."
+    task.wait(1)
+
+    -- Explosion
+    local ex = Instance.new("Explosion")
+    ex.Position = char.HumanoidRootPart.Position
+    ex.BlastRadius = 10
+    ex.BlastPressure = 1e6
+    ex.Parent = workspace
+
+    -- Kill player
+    char:BreakJoints()
+
+    -- Reset
+    disableSpin()
+    disableFly()
+    Features.FlySpeed = 60
+
+    button.Text = "PUPPER BOMB"
+    button.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+end
+--========================================================
+-- BUTTON FACTORY
+--========================================================
+local function addBtn(parent, name, callback)
+    local b = Instance.new("TextButton")
+    b.Parent = parent
+    b.Size = UDim2.new(1, 0, 0, 32)
+    b.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    b.Text = name
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 15
+    b.AutoButtonColor = false
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = b
+
+    local active = false
+    b.MouseButton1Click:Connect(function()
+        active = not active
+        b.BackgroundColor3 = active and Color3.fromRGB(60, 120, 255) or Color3.fromRGB(35, 35, 40)
+        callback(active, b)
+    end)
+
+    return b
+end
+--========================================================
+-- GUI ASSEMBLY (SECTIONS + BUTTONS)
+--========================================================
+
+-- AIMBOT SECTION
+local aimbotContent = createSection("AIMBOT")
+
+addBtn(aimbotContent, "Aimbot", function(v)
+    AimbotEnabled = v
+    updateAimbotButton()
+end)
+
+addBtn(aimbotContent, "Mode: Closest", function()
+    AimbotMode = "Closest"
+end)
+
+addBtn(aimbotContent, "Mode: Strongest", function()
+    AimbotMode = "Strongest"
+end)
+
+addBtn(aimbotContent, "Mode: Weakest", function()
+    AimbotMode = "Weakest"
+end)
+
+addBtn(aimbotContent, "Mode: Furthest", function()
+    AimbotMode = "Furthest"
+end)
+
+addBtn(aimbotContent, "Team Check", function(v)
+    TeamCheck = v
+end)
+
+addBtn(aimbotContent, "FOV Circle", function(v)
+    fovCircle.Visible = v
+end)
+
+addBtn(aimbotContent, "Lock Mode: Off", function()
+    LockMode = "Off"
+end)
+
+addBtn(aimbotContent, "Lock Mode: Soft", function()
+    LockMode = "Soft"
+end)
+
+addBtn(aimbotContent, "Lock Mode: Hard", function()
+    LockMode = "Hard"
+end)
+
+
+-- VISUALS SECTION
+local visualContent = createSection("VISUALS")
+
+addBtn(visualContent, "ESP", function(v)
+    Features.ESP = v
+end)
+
+
+-- MOVEMENT SECTION
+local moveContent = createSection("MOVEMENT")
+
+addBtn(moveContent, "Fly", function(v)
+    if v then enableFly() else disableFly() end
+end)
+
+addBtn(moveContent, "Noclip", function(v)
+    if v then enableNoclip() else disableNoclip() end
+end)
+
+addBtn(moveContent, "Inf Jump", function(v)
+    if v then enableInfJump() else disableInfJump() end
+end)
+
+addBtn(moveContent, "Jesus", function(v)
+    if v then enableJesus() else disableJesus() end
+end)
+
+
+-- FUN SECTION
+local funContent = createSection("FUN")
+
+addBtn(funContent, "Spin", function(v)
+    if v then enableSpin() else disableSpin() end
+end)
+
+addBtn(funContent, "PUPPER BOMB", function(v, b)
+    if v then pupperBomb(b) end
+end)
+
+
+--========================================================
+-- FOOTER (PANIC + DESTROY)
+--========================================================
+
+local foot = Instance.new("Frame")
+foot.Parent = main
+foot.Size = UDim2.new(1, 0, 0, 40)
+foot.Position = UDim2.new(0, 0, 1, -40)
+foot.BackgroundTransparency = 1
+
+local function qBtn(txt, x, col, call)
+    local b = Instance.new("TextButton")
+    b.Parent = foot
+    b.Size = UDim2.new(0.45, 0, 0.8, 0)
+    b.Position = UDim2.new(x, 0, 0.1, 0)
+    b.Text = txt
+    b.BackgroundColor3 = col
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 14
+    b.AutoButtonColor = false
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = b
+
+    b.MouseButton1Click:Connect(call)
+end
+
+qBtn("PANIC", 0.03, Color3.fromRGB(150, 50, 50), function()
+    disableFly()
+    disableNoclip()
+    disableJesus()
+    disableSpin()
+    disableInfJump()
+    AimbotEnabled = false
+    updateAimbotButton()
+    Features.ESP = true
+    fovCircle.Visible = true
+end)
+
+qBtn("DESTROY", 0.52, Color3.fromRGB(50, 50, 50), function()
+    gui:Destroy()
+end)
