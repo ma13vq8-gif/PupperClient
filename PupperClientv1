@@ -979,3 +979,121 @@ addBtn(tpContent, "Spook Player", function(v, b)
 
     b.Text = "Spook Player"
 end)
+--========================================================
+-- FUN SECTION
+--========================================================
+
+local funContent = createSection("FUN")
+
+addBtn(funContent, "Spin", function(v)
+    if v then enableSpin() else disableSpin() end
+end)
+
+addBtn(funContent, "PUPPER BOMB", function(v, b)
+    if v then pupperBomb(b) end
+end)
+
+--========================================================
+-- MOVEMENT SECTION
+--========================================================
+
+local moveContent = createSection("MOVEMENT")
+
+addBtn(moveContent, "Fly", function(v)
+    if v then enableFly() else disableFly() end
+end)
+
+addBtn(moveContent, "Noclip", function(v)
+    if v then enableNoclip() else disableNoclip() end
+end)
+
+addBtn(moveContent, "Infinite Jump", function(v)
+    if v then enableInfJump() else disableInfJump() end
+end)
+
+addBtn(moveContent, "Jesus", function(v)
+    if v then enableJesus() else disableJesus() end
+end)
+
+--========================================================
+-- ESP SECTION
+--========================================================
+
+local espContent = createSection("ESP")
+
+addBtn(espContent, "Toggle ESP", function(v)
+    Features.ESP = v
+end)
+
+--========================================================
+-- AIMBOT SECTION
+--========================================================
+
+local aimContent = createSection("AIMBOT")
+
+addBtn(aimContent, "Toggle Aimbot", function(v)
+    AimbotEnabled = v
+    updateAimbotButton()
+end)
+
+addBtn(aimContent, "Team Check", function(v)
+    TeamCheck = v
+end)
+
+
+--========================================================
+-- FOOTER (PANIC + DESTROY)
+--========================================================
+
+local foot = Instance.new("Frame")
+foot.Parent = main
+foot.Size = UDim2.new(1, 0, 0, 40)
+foot.Position = UDim2.new(0, 0, 1, -40)
+foot.BackgroundTransparency = 1
+
+local function qBtn(txt, x, col, call)
+    local b = Instance.new("TextButton")
+    b.Parent = foot
+    b.Size = UDim2.new(0.45, 0, 0.8, 0)
+    b.Position = UDim2.new(x, 0, 0.1, 0)
+    b.Text = txt
+    b.BackgroundColor3 = col
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 14
+    b.AutoButtonColor = false
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = b
+
+    b.MouseButton1Click:Connect(call)
+end
+
+-- PANIC BUTTON
+qBtn("PANIC", 0.05, Color3.fromRGB(200, 60, 60), function()
+    Features.Fly = false
+    Features.Noclip = false
+    Features.InfJump = false
+    Features.Jesus = false
+    Features.Spin = false
+    Features.ESP = false
+    AimbotEnabled = false
+    LockMode = "Off"
+
+    disableFly()
+    disableNoclip()
+    disableInfJump()
+    disableJesus()
+    disableSpin()
+
+    fovCircle.Visible = false
+
+    print("PUPPER CLIENT: All features disabled")
+end)
+
+-- DESTROY BUTTON
+qBtn("DESTROY", 0.52, Color3.fromRGB(80, 80, 80), function()
+    gui:Destroy()
+    print("PUPPER CLIENT: GUI destroyed")
+end)
