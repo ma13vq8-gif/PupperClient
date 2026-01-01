@@ -815,6 +815,80 @@ local function pupperBomb(button)
     button.Text = "PUPPER BOMB"
     button.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
 end
+
+--========================================================
+-- TP SECTION
+--========================================================
+
+local tpContent = createSection("TP")
+
+-- GOTO FEATURE
+addBtn(tpContent, "Goto Player", function(v, b)
+    if not v then return end
+
+    b.Text = "Enter Name"
+    local name = game:GetService("Players").LocalPlayer.PlayerGui:WaitForChild("Chat").Frame.ChatBarParentFrame.Frame.Box.Text
+
+    local target = nil
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Name:lower():sub(1, #name) == name:lower() then
+            target = plr
+            break
+        end
+    end
+
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+        b.Text = "Goto Player"
+    else
+        b.Text = "Not Found"
+        task.wait(1)
+        b.Text = "Goto Player"
+    end
+end)
+
+-- SPOOK FEATURE
+addBtn(tpContent, "Spook Player", function(v, b)
+    if not v then return end
+
+    b.Text = "Enter Name"
+    local name = game:GetService("Players").LocalPlayer.PlayerGui:WaitForChild("Chat").Frame.ChatBarParentFrame.Frame.Box.Text
+
+    local target = nil
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Name:lower():sub(1, #name) == name:lower() then
+            target = plr
+            break
+        end
+    end
+
+    if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+        b.Text = "Not Found"
+        task.wait(1)
+        b.Text = "Spook Player"
+        return
+    end
+
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local original = hrp.CFrame
+    local targetHRP = target.Character.HumanoidRootPart
+
+    -- Teleport in front of target
+    hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, -3)
+
+    task.wait(1)
+
+    -- Return to original position
+    hrp.CFrame = original
+
+    b.Text = "Spook Player"
+end)
+
 --========================================================
 -- BUTTON FACTORY
 --========================================================
