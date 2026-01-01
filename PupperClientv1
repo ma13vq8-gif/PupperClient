@@ -254,6 +254,34 @@ local function createSection(sectionName)
     return content
 end
 --========================================================
+-- BUTTON FACTORY (MUST COME AFTER createSection)
+--========================================================
+local function addBtn(parent, name, callback)
+    local b = Instance.new("TextButton")
+    b.Parent = parent
+    b.Size = UDim2.new(1, 0, 0, 32)
+    b.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    b.Text = name
+    b.TextColor3 = Color3.new(1,1,1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 15
+    b.AutoButtonColor = false
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = b
+
+    local active = false
+    b.MouseButton1Click:Connect(function()
+        active = not active
+        b.BackgroundColor3 = active and Color3.fromRGB(60, 120, 255) or Color3.fromRGB(35, 35, 40)
+        callback(active, b)
+    end)
+
+    return b
+end
+
+--========================================================
 -- NEW AIMBOT SYSTEM (REPLACES OLD SYSTEM COMPLETELY)
 --========================================================
 
@@ -950,104 +978,4 @@ addBtn(tpContent, "Spook Player", function(v, b)
     end
 
     b.Text = "Spook Player"
-end)
-
-
---========================================================
--- BUTTON FACTORY (FINALIZED)
---========================================================
-local function addBtn(parent, name, callback)
-    local b = Instance.new("TextButton")
-    b.Parent = parent
-    b.Size = UDim2.new(1, 0, 0, 32)
-    b.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-    b.Text = name
-    b.TextColor3 = Color3.new(1,1,1)
-    b.Font = Enum.Font.GothamBold
-    b.TextSize = 15
-    b.AutoButtonColor = false
-
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = b
-
-    local active = false
-    b.MouseButton1Click:Connect(function()
-        active = not active
-        b.BackgroundColor3 = active and Color3.fromRGB(60, 120, 255) or Color3.fromRGB(35, 35, 40)
-        callback(active, b)
-    end)
-
-    return b
-end
-
---========================================================
--- FUN SECTION
---========================================================
-
-local funContent = createSection("FUN")
-
-addBtn(funContent, "Spin", function(v)
-    if v then enableSpin() else disableSpin() end
-end)
-
-addBtn(funContent, "PUPPER BOMB", function(v, b)
-    if v then pupperBomb(b) end
-end)
-
---========================================================
--- FOOTER (PANIC + DESTROY)
---========================================================
-
-local foot = Instance.new("Frame")
-foot.Parent = main
-foot.Size = UDim2.new(1, 0, 0, 40)
-foot.Position = UDim2.new(0, 0, 1, -40)
-foot.BackgroundTransparency = 1
-
-local function qBtn(txt, x, col, call)
-    local b = Instance.new("TextButton")
-    b.Parent = foot
-    b.Size = UDim2.new(0.45, 0, 0.8, 0)
-    b.Position = UDim2.new(x, 0, 0.1, 0)
-    b.Text = txt
-    b.BackgroundColor3 = col
-    b.TextColor3 = Color3.new(1,1,1)
-    b.Font = Enum.Font.GothamBold
-    b.TextSize = 14
-    b.AutoButtonColor = false
-
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = b
-
-    b.MouseButton1Click:Connect(call)
-end
-
--- PANIC BUTTON
-qBtn("PANIC", 0.05, Color3.fromRGB(200, 60, 60), function()
-    Features.Fly = false
-    Features.Noclip = false
-    Features.InfJump = false
-    Features.Jesus = false
-    Features.Spin = false
-    Features.ESP = false
-    AimbotEnabled = false
-    LockMode = "Off"
-
-    disableFly()
-    disableNoclip()
-    disableInfJump()
-    disableJesus()
-    disableSpin()
-
-    fovCircle.Visible = false
-
-    print("PUPPER CLIENT: All features disabled")
-end)
-
--- DESTROY BUTTON
-qBtn("DESTROY", 0.52, Color3.fromRGB(80, 80, 80), function()
-    gui:Destroy()
-    print("PUPPER CLIENT: GUI destroyed")
 end)
