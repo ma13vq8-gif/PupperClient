@@ -954,7 +954,7 @@ end)
 
 
 --========================================================
--- BUTTON FACTORY
+-- BUTTON FACTORY (FINALIZED)
 --========================================================
 local function addBtn(parent, name, callback)
     local b = Instance.new("TextButton")
@@ -982,83 +982,9 @@ local function addBtn(parent, name, callback)
 end
 
 --========================================================
--- GUI ASSEMBLY (SECTIONS + BUTTONS)
+-- FUN SECTION
 --========================================================
 
--- AIMBOT SECTION
-local aimbotContent = createSection("AIMBOT")
-
-addBtn(aimbotContent, "Aimbot", function(v)
-    AimbotEnabled = v
-    updateAimbotButton()
-end)
-
-addBtn(aimbotContent, "Mode: Closest", function()
-    AimbotMode = "Closest"
-end)
-
-addBtn(aimbotContent, "Mode: Strongest", function()
-    AimbotMode = "Strongest"
-end)
-
-addBtn(aimbotContent, "Mode: Weakest", function()
-    AimbotMode = "Weakest"
-end)
-
-addBtn(aimbotContent, "Mode: Furthest", function()
-    AimbotMode = "Furthest"
-end)
-
-addBtn(aimbotContent, "Team Check", function(v)
-    TeamCheck = v
-end)
-
-addBtn(aimbotContent, "FOV Circle", function(v)
-    fovCircle.Visible = v
-end)
-
-addBtn(aimbotContent, "Lock Mode: Off", function()
-    LockMode = "Off"
-end)
-
-addBtn(aimbotContent, "Lock Mode: Soft", function()
-    LockMode = "Soft"
-end)
-
-addBtn(aimbotContent, "Lock Mode: Hard", function()
-    LockMode = "Hard"
-end)
-
-
--- VISUALS SECTION
-local visualContent = createSection("VISUALS")
-
-addBtn(visualContent, "ESP", function(v)
-    Features.ESP = v
-end)
-
-
--- MOVEMENT SECTION
-local moveContent = createSection("MOVEMENT")
-
-addBtn(moveContent, "Fly", function(v)
-    if v then enableFly() else disableFly() end
-end)
-
-addBtn(moveContent, "Noclip", function(v)
-    if v then enableNoclip() else disableNoclip() end
-end)
-
-addBtn(moveContent, "Inf Jump", function(v)
-    if v then enableInfJump() else disableInfJump() end
-end)
-
-addBtn(moveContent, "Jesus", function(v)
-    if v then enableJesus() else disableJesus() end
-end)
-
-
--- FUN SECTION
 local funContent = createSection("FUN")
 
 addBtn(funContent, "Spin", function(v)
@@ -1068,7 +994,6 @@ end)
 addBtn(funContent, "PUPPER BOMB", function(v, b)
     if v then pupperBomb(b) end
 end)
-
 
 --========================================================
 -- FOOTER (PANIC + DESTROY)
@@ -1093,24 +1018,36 @@ local function qBtn(txt, x, col, call)
     b.AutoButtonColor = false
 
     local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 8)
+    c.CornerRadius = UDim.new(0, 6)
     c.Parent = b
 
     b.MouseButton1Click:Connect(call)
 end
 
-qBtn("PANIC", 0.03, Color3.fromRGB(150, 50, 50), function()
+-- PANIC BUTTON
+qBtn("PANIC", 0.05, Color3.fromRGB(200, 60, 60), function()
+    Features.Fly = false
+    Features.Noclip = false
+    Features.InfJump = false
+    Features.Jesus = false
+    Features.Spin = false
+    Features.ESP = false
+    AimbotEnabled = false
+    LockMode = "Off"
+
     disableFly()
     disableNoclip()
+    disableInfJump()
     disableJesus()
     disableSpin()
-    disableInfJump()
-    AimbotEnabled = false
-    updateAimbotButton()
-    Features.ESP = true
-    fovCircle.Visible = true
+
+    fovCircle.Visible = false
+
+    print("PUPPER CLIENT: All features disabled")
 end)
 
-qBtn("DESTROY", 0.52, Color3.fromRGB(50, 50, 50), function()
+-- DESTROY BUTTON
+qBtn("DESTROY", 0.52, Color3.fromRGB(80, 80, 80), function()
     gui:Destroy()
+    print("PUPPER CLIENT: GUI destroyed")
 end)
